@@ -39,6 +39,7 @@ let lastSpokenLabel = "";
 let lastSpeechTime = 0;
 let speechEnabled = true;
 let speechVoice = null;
+let welcomeSpoken = false;
 
 function getFemaleVoice() {
   const voices = window.speechSynthesis.getVoices() || [];
@@ -109,25 +110,22 @@ function announce(text, interrupt = true) {
 }
 
 function speakPageContents() {
-  const delay = 1000;
-  setTimeout(async () => {
-    try {
-      if (!speechVoice && window.speechSynthesis) {
-        await ensureVoicesLoaded();
-        speechVoice = getFemaleVoice();
-        console.log('Voice set after loading:', speechVoice ? speechVoice.name : 'none');
-      }
-      const msg = 'Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.';
-      if (screenReaderStatus) {
-        screenReaderStatus.innerText = msg;
-      }
+  if (welcomeSpoken) return;
+  welcomeSpoken = true;
+  const msg = 'Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.';
+  if (screenReaderStatus) {
+    screenReaderStatus.innerText = msg;
+  }
+  if (!speechVoice && window.speechSynthesis) {
+    ensureVoicesLoaded().then(() => {
+      speechVoice = getFemaleVoice();
       if (speechEnabled && window.speechSynthesis) {
-        speak(msg, true);
+        speak(msg, false);
       }
-    } catch (e) {
-      console.error('Error in speakPageContents:', e);
-    }
-  }, delay);
+    }).catch((e) => console.error('Voice loading error:', e));
+  } else if (speechEnabled && window.speechSynthesis) {
+    speak(msg, false);
+  }
 }
 
 function toggleSpeech() {
@@ -167,11 +165,14 @@ function initAssist() {
   if (assistButton) {
     assistButton.addEventListener('click', () => {
       assistButton.style.display = 'none';
-      announce('Starting the camera now. Please allow camera access if prompted.');
+      speakPageContents();
+      announce('Starting the camera now. Please allow camera access if prompted.', false);
       init();
     });
   }
-  speakPageContents();
+  if (screenReaderStatus) {
+    screenReaderStatus.innerText = 'Welcome to Colour Detect. Tap anywhere on the page to start the camera and enable read aloud guidance.';
+  }
 }
 
 function startFromTap() {
@@ -181,7 +182,8 @@ function startFromTap() {
   if (assistButton) {
     assistButton.style.display = 'none';
   }
-  announce('Thanks. Starting the camera now. Please allow camera access if prompted.');
+  speakPageContents();
+  announce('Starting the camera now. Please allow camera access if prompted.', false);
   init();
 }
 
