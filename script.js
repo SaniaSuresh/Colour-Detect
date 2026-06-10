@@ -50,33 +50,53 @@ function getFemaleVoice() {
 
 function ensureVoicesLoaded() {
   return new Promise((resolve) => {
-    if (window.speechSynthesis.getVoices().length > 0) {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      console.log('Voices already loaded:', voices.length);
       resolve();
-    } else {
-      const onVoicesChanged = () => {
-        if (window.speechSynthesis.getVoices().length > 0) {
-          window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
-          resolve();
-        }
-      };
-      window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
-      setTimeout(resolve, 2000);
+      return;
     }
+    
+    let attempts = 0;
+    const onVoicesChanged = () => {
+      const newVoices = window.speechSynthesis.getVoices();
+      console.log('voiceschanged event, voices:', newVoices.length);
+      if (newVoices.length > 0) {
+        window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+        resolve();
+      }
+    };
+    
+    window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+    const timeout = setTimeout(() => {
+      window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+      console.log('Voice loading timeout, resolving anyway');
+      resolve();
+    }, 3000);
   });
 }
 
 function speak(text, interrupt = true) {
-  if (!speechEnabled || !window.speechSynthesis) return;
-  if (!speechVoice) {
-    speechVoice = getFemaleVoice();
+  try {
+    if (!speechEnabled || !window.speechSynthesis) {
+      console.log('Speech not enabled or speechSynthesis unavailable');
+      return;
+    }
+    if (!speechVoice) {
+      speechVoice = getFemaleVoice();
+    }
+    if (interrupt) window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.lang = 'en-US';
+    if (speechVoice) utterance.voice = speechVoice;
+    utterance.onerror = (e) => console.error('Speech error:', e);
+    window.speechSynthesis.speak(utterance);
+    console.log('Speech started:', text.substring(0, 50));
+  } catch (e) {
+    console.error('Speech exception:', e);
   }
-  if (interrupt) window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  utterance.lang = 'en-US';
-  if (speechVoice) utterance.voice = speechVoice;
-  window.speechSynthesis.speak(utterance);
 }
 
 function announce(text, interrupt = true) {
@@ -89,13 +109,24 @@ function announce(text, interrupt = true) {
 }
 
 function speakPageContents() {
-  const delay = 800;
+  const delay = 1000;
   setTimeout(async () => {
-    if (!speechVoice) {
-      await ensureVoicesLoaded();
-      speechVoice = getFemaleVoice();
+    try {
+      if (!speechVoice && window.speechSynthesis) {
+        await ensureVoicesLoaded();
+        speechVoice = getFemaleVoice();
+        console.log('Voice set after loading:', speechVoice ? speechVoice.name : 'none');
+      }
+      const msg = 'Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.';
+      if (screenReaderStatus) {
+        screenReaderStatus.innerText = msg;
+      }
+      if (speechEnabled && window.speechSynthesis) {
+        speak(msg, true);
+      }
+    } catch (e) {
+      console.error('Error in speakPageContents:', e);
     }
-    announce('Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.');
   }, delay);
 }
 
