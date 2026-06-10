@@ -48,6 +48,23 @@ function getFemaleVoice() {
   return voices.find(v => femaleKeywords.some(keyword => v.name.toLowerCase().includes(keyword))) || voices[0] || null;
 }
 
+function ensureVoicesLoaded() {
+  return new Promise((resolve) => {
+    if (window.speechSynthesis.getVoices().length > 0) {
+      resolve();
+    } else {
+      const onVoicesChanged = () => {
+        if (window.speechSynthesis.getVoices().length > 0) {
+          window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+          resolve();
+        }
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+      setTimeout(resolve, 2000);
+    }
+  });
+}
+
 function speak(text, interrupt = true) {
   if (!speechEnabled || !window.speechSynthesis) return;
   if (!speechVoice) {
@@ -72,8 +89,12 @@ function announce(text, interrupt = true) {
 }
 
 function speakPageContents() {
-  const delay = 2000;
-  setTimeout(() => {
+  const delay = 800;
+  setTimeout(async () => {
+    if (!speechVoice) {
+      await ensureVoicesLoaded();
+      speechVoice = getFemaleVoice();
+    }
     announce('Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.');
   }, delay);
 }
@@ -99,12 +120,16 @@ function initAssist() {
   assistButton = document.getElementById('assist-button');
   tapOverlay = document.getElementById('tap-overlay');
   screenReaderStatus = document.getElementById('screen-reader-status');
+  
   if (window.speechSynthesis) {
-    speechVoice = getFemaleVoice();
+    ensureVoicesLoaded().then(() => {
+      speechVoice = getFemaleVoice();
+    });
     window.speechSynthesis.onvoiceschanged = () => {
       speechVoice = getFemaleVoice();
     };
   }
+  
   if (tapOverlay) {
     tapOverlay.addEventListener('click', startFromTap);
   }
