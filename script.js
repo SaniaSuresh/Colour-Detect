@@ -72,7 +72,10 @@ function announce(text, interrupt = true) {
 }
 
 function speakPageContents() {
-  announce('Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.');
+  const delay = 500 + Math.floor(Math.random() * 500);
+  setTimeout(() => {
+    announce('Welcome to Colour Detect. The read aloud option is for visually impaired people. Tap anywhere to enable camera access and speech guidance. Once the camera is enabled, hold an object in front of the camera to identify colours.');
+  }, delay);
 }
 
 function toggleSpeech() {
