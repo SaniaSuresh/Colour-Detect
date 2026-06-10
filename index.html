@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Colour Detect for Accessibility</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Accessible Colour Detection</p>
+        <h1>See colours with confidence</h1>
+        <p class="hero-text">
+          A modern, easy-to-use colour detection tool designed for people with colour blindness and visual impairments.
+          Includes a read-aloud option for visually impaired people, plus camera guidance and colour feedback.
+        </p>
+        <div class="hero-actions">
+          <button class="primary-button" type="button" onclick="init()">Start Detection</button>
+          <button class="secondary-button theme-button" type="button" onclick="toggleTheme()">Pastel Green theme</button>
+          <button class="secondary-button speech-button" type="button" onclick="toggleSpeech()">Read aloud on</button>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="card-label">Live Camera</div>
+        <div id="webcam-container" class="webcam-frame"></div>
+      </div>
+    </section>
+
+    <section class="results-panel">
+      <div class="result-header">
+        <h2>Detected Colours</h2>
+        <p>Prediction labels update while the camera is active.</p>
+      </div>
+      <div id="label-container" class="labels-grid"></div>
+    </section>
+
+    <section class="info-panel">
+      <div class="info-card">
+        <h3>How it works</h3>
+        <p>
+          This page uses a Teachable Machine image model to identify colours captured by your webcam.
+          Press Start, allow camera access, and the model will display the most likely colour labels.
+        </p>
+      </div>
+      <div class="info-card">
+        <h3>Setup note</h3>
+        <p>
+          This page uses a hosted Teachable Machine model at <code>https://teachablemachine.withgoogle.com/models/6kv3iqWni/</code>.
+          For camera access, open the page from a secure origin (HTTPS or localhost), allow permission, and tap anywhere to enable the camera.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div id="tap-overlay" class="tap-overlay" role="button" aria-label="Tap anywhere to enable camera">Tap anywhere to enable camera</div>
+  <div id="screen-reader-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="night-stars" aria-hidden="true">
+    <div class="star star-1"></div>
+    <div class="star star-2"></div>
+    <div class="star star-3"></div>
+    <div class="star star-4"></div>
+    <div class="star star-5"></div>
+    <div class="star star-6"></div>
+    <div class="star star-7"></div>
+    <div class="star star-8"></div>
+    <div class="star star-9"></div>
+    <div class="star star-10"></div>
+  </div>
+
+  <div class="garden-art">
+    <div class="branch branch-1"></div>
+    <div class="branch branch-2"></div>
+    <div class="flower flower-1"></div>
+    <div class="flower flower-2"></div>
+    <div class="flower flower-3"></div>
+    <div class="flower flower-4 flower-daisy"></div>
+    <div class="flower flower-5 flower-lotus"></div>
+    <div class="flower flower-6 flower-daisy"></div>
+    <div class="flower flower-7 flower-lotus"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
